@@ -20,7 +20,7 @@ try:
         'address': section['TARGET_HOST_ADDR'],
         'listen_port': section['TARGET_HOST_SSH_LISTEN_PORT'],
         'local_port': section['TARGET_HOST_LOCAL_TUNNEL_PORT'],
-        'autossh_port': section['AUTOSSH_INTERNAL_PORT'],
+        'autossh_port': int(section['AUTOSSH_INTERNAL_PORT']),
     }
 except:
     print("Invalid <config.ini> file.")
@@ -30,7 +30,6 @@ except:
 def check_autossh():
     for cn in psutil.net_connections():
         if cn.status == 'LISTEN' and cn.laddr.port == tunnel_info['autossh_port']:
-            print('Found:', cn)
             return True
     return False
 
@@ -40,9 +39,9 @@ def seconds_elapsed():
 def run_autossh():
     cmdline = [
         'autossh',
-        '-M', tunnel_info['autossh_port'],
-        '-o', '"PubkeyAuthentication=yes"',
-        '-o', '"PasswordAuthentication=no"',
+        '-M', str(tunnel_info['autossh_port']),
+        '-o', 'PubkeyAuthentication=yes',
+        '-o', 'PasswordAuthentication=no',
         '-i', '/home/pi/.ssh/id_rsa',
         '-f', '-N', '-T', '-R',
         '{}:localhost:22'.format(tunnel_info['local_port']),
@@ -51,7 +50,7 @@ def run_autossh():
     ]
     #print(" ".join(cmdline))
     try:
-        print(subprocess.run(cmdline))
+        print(subprocess.call(cmdline))
         return True
     except Exception as ex:
         print(ex)
